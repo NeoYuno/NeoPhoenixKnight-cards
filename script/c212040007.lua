@@ -76,12 +76,12 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 		--Gain ATK
 		local atk=tc:GetBaseAttack()//2
 		if atk<0 then atk=0 end
-		local e2=Effect.CreateEffect(c)
-		e2:SetType(EFFECT_TYPE_SINGLE)
+		local e2=Effect.CreateEffect(tc)
+		e2:SetType(EFFECT_TYPE_EQUIP)
 		e2:SetCode(EFFECT_UPDATE_ATTACK)
-		e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 		e2:SetValue(atk)
-		c:RegisterEffect(e2)
+		e2:SetReset(RESET_EVENT|RESETS_STANDARD)
+		tc:RegisterEffect(e2)
 	end
 end
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)

@@ -52,16 +52,14 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 end
 function s.ffilter(c,fc,sumtype,sump,sub,matg,sg)
-	return not sg or sg:FilterCount(aux.TRUE,c)==0 or (sg:IsExists(Card.IsAttribute,1,c,ATTRIBUTE_DARK,fc,sumtype,sump)
-		and sg:IsExists(Card.IsRace,1,c,c:GetRace(fc,sumtype,sump),fc,sumtype,sump)
-		and sg:IsExists(s.fusfilter1,1,c,fc,sumtype,sump)
-		and sg:IsExists(s.fusfilter2,1,c,fc,sumtype,sump))
-end
-function s.fusfilter1(c,code,fc,sumtype,sump)
-	return c:IsLevelAbove(7) and not c:IsHasEffect(511002961)
-end
-function s.fusfilter2(c,code,fc,sumtype,sump)
-	return c:IsType(TYPE_FUSION) and not c:IsHasEffect(511002961)
+	if not (c:IsAttribute(ATTRIBUTE_DARK,fc,sub) and c:IsLevelAbove(7)) then return false end
+    if not sg or #sg==0 then return true end
+    local tc=sg:GetFirst()
+    if c:GetRace(fc,sub)~=tc:GetRace(fc,sub) then return false end
+    if #sg==1 then
+        return (c:IsType(TYPE_FUSION) or tc:IsType(TYPE_FUSION))
+    end
+    return true
 end
 
 function s.efilter(e,re,rp)
@@ -96,27 +94,27 @@ function s.eqfilter(c)
 end
 
 function s.atkall(e,c)
-	local eg=e:GetHandler():GetEquipGroup():Filter(s.eqfilter,nil)
-	if #eg==0 then return false end
-	local g=eg:GetFirst()
-	while g do
-		if c:IsRace(g:GetOriginalRace()) or c:IsAttribute(g:GetOriginalAttribute()) then return true end
-		g=eg:GetNext()
+	local eqg=e:GetHandler():GetEquipGroup()
+	for ec in aux.Next(eqg) do
+		if c:IsRace(ec:GetRace()) or c:IsAttribute(ec:GetAttribute()) then
+			return true
+		end
 	end
 	return false
 end
 
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-    local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_BP)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetTargetRange(1,0)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
 	local eg=c:GetEquipGroup():Filter(s.eqfilter,nil)
 	if chk==0 then return #eg>0 end
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_CANNOT_BP)
+	e1:SetTargetRange(1,0)
+	e1:SetReset(RESET_PHASE|PHASE_END)
+	Duel.RegisterEffect(e1,tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local g=eg:Select(tp,1,1,nil)
 	e:SetLabelObject(g:GetFirst())
